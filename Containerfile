@@ -4,7 +4,9 @@ COPY build_files /
 COPY system_files /system_files
 
 # Base Image
-FROM ghcr.io/ublue-os/bazzite:stable@sha256:b923f92d5a5b59eb992e269383eba2744601052da9d3d1595f76e79aa6ce2df0
+# bazzite-nvidia-open: NVIDIA open kernel modules (recommended for RTX 4090 / Ada).
+# Pinned by tag; renovate (.github/renovate.json5) adds/bumps the @sha256 digest.
+FROM ghcr.io/ublue-os/bazzite-nvidia-open:stable
 ## Other possible base images include:
 # FROM ghcr.io/ublue-os/bazzite:testing
 # FROM ghcr.io/ublue-os/aurora:stable

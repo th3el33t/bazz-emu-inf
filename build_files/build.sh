@@ -27,3 +27,15 @@ systemctl enable bazz-first-boot-appimages.service
 # [Install] section); the GPU textfile timer feeds it nvidia_gpu_* metrics.
 chmod +x /usr/libexec/bazz-gpu-textfile.sh
 systemctl enable bazz-gpu-textfile.timer
+
+# Sunshine game streaming: native RPM from the official LizardByte COPR (the
+# Flathub Flatpak is sandboxed away from setcap and therefore can't do KMS
+# capture). KMS needs cap_sys_admin on the binary and nvidia-drm.modeset=1
+# (kargs.d drop-in); virtual input needs the udev rule + input group, which the
+# system service grants via SupplementaryGroups.
+dnf5 -y copr enable lizardbyte/stable
+dnf5 -y install Sunshine
+setcap cap_sys_admin+p /usr/bin/sunshine
+chmod +x /usr/libexec/bazz-sunshine-bootstrap.sh
+systemctl enable bazz-sunshine-bootstrap.service
+systemctl enable sunshine.service

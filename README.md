@@ -41,7 +41,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] Base: `bazzite-nvidia-open` + CI + identity
 - [x] Emulation apps: RetroArch + PCSX2 (first-boot Flatpaks); ES-DE + DuckStation (first-boot AppImages — neither exists on Flathub)
 - [x] Monitoring: node_exporter quadlet (`:9100`) + `nvidia_gpu_*` textfile timer (replaces the Windows exporter; same metric names, homelab alert rules unchanged)
-- [ ] Sunshine streaming config + per-stream gamescope
+- [x] Sunshine streaming: native RPM (lizardbyte/stable COPR), system service, KMS capture, first-boot credential bootstrap — Moonlight pairing is the owner-verification step; per-stream gamescope app entries follow
 - [ ] Local inference: llama.cpp (CUDA) + llama-swap + Qwen, as podman quadlets with a GPU gate
 - [ ] WhisperX transcription (podman quadlet + Samba watch folder)
 - [ ] Minecraft server (native podman: itzg + playit + backups)

@@ -39,7 +39,8 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 ## Roles (build-out status)
 
 - [x] Base: `bazzite-nvidia-open` + CI + identity
-- [x] Emulation apps: ES-DE, RetroArch, DuckStation, PCSX2 (first-boot Flatpaks)
+- [x] Emulation apps: RetroArch + PCSX2 (first-boot Flatpaks); ES-DE + DuckStation (first-boot AppImages — neither exists on Flathub)
+- [x] Monitoring: node_exporter quadlet (`:9100`) + `nvidia_gpu_*` textfile timer (replaces the Windows exporter; same metric names, homelab alert rules unchanged)
 - [ ] Sunshine streaming config + per-stream gamescope
 - [ ] Local inference: llama.cpp (CUDA) + llama-swap + Qwen, as podman quadlets with a GPU gate
 - [ ] WhisperX transcription (podman quadlet + Samba watch folder)

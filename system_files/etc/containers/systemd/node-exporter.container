@@ -1,0 +1,16 @@
+[Unit]
+Description=Prometheus node_exporter (host metrics for the homelab)
+
+[Container]
+Image=docker.io/prom/node-exporter:v1.12.1
+ContainerName=node-exporter
+Network=host
+Volume=/:/host:ro,rslave
+Volume=/var/lib/node_exporter/textfile:/textfile:ro,z
+Exec=--path.rootfs=/host --collector.textfile.directory=/textfile
+
+[Service]
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

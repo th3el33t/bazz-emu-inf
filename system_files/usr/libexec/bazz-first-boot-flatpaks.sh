@@ -12,8 +12,16 @@ mkdir -p "$(dirname "$stamp")"
 flatpak remote-add --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 
 mapfile -t apps < <(grep -vE '^\s*(#|$)' "$list")
-if [ "${#apps[@]}" -gt 0 ]; then
-    flatpak install -y --noninteractive flathub "${apps[@]}"
+failed=0
+for app in "${apps[@]}"; do
+    if ! flatpak install -y --noninteractive flathub "$app"; then
+        echo "WARNING: failed to install $app" >&2
+        failed=1
+    fi
+done
+# Only stamp when every listed app installed, so a failure retries next boot.
+if [ "$failed" -ne 0 ]; then
+    exit 1
 fi
 
 touch "$stamp"

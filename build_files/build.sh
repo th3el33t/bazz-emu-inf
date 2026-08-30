@@ -22,3 +22,8 @@ chmod +x /usr/libexec/bazz-first-boot-flatpaks.sh
 chmod +x /usr/libexec/bazz-first-boot-appimages.sh
 systemctl enable bazz-first-boot-flatpaks.service
 systemctl enable bazz-first-boot-appimages.service
+
+# Monitoring: node_exporter runs as a podman quadlet (self-enabling via its
+# [Install] section); the GPU textfile timer feeds it nvidia_gpu_* metrics.
+chmod +x /usr/libexec/bazz-gpu-textfile.sh
+systemctl enable bazz-gpu-textfile.timer

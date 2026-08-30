@@ -1,0 +1,6 @@
+[Unit]
+Description=Export NVIDIA GPU metrics to the node_exporter textfile directory
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bazz-gpu-textfile.sh

@@ -1,0 +1,9 @@
+[Unit]
+Description=NVIDIA GPU textfile metrics refresh
+
+[Timer]
+OnBootSec=30
+OnUnitActiveSec=15s
+
+[Install]
+WantedBy=timers.target

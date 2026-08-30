@@ -1,0 +1,15 @@
+[Unit]
+Description=Sunshine game-streaming host (Moonlight server)
+After=network-online.target bazz-sunshine-bootstrap.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=shrinksenpai
+SupplementaryGroups=input
+ExecStart=/usr/bin/sunshine
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

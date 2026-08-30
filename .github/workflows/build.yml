@@ -157,6 +157,12 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
           DIGEST: ${{ steps.push-image.outputs.digest }}
         run: |
+          # Signing is optional until a cosign keypair is configured. Skip cleanly
+          # (keeps the build green) when SIGNING_SECRET has not been set yet.
+          if [ -z "${COSIGN_PRIVATE_KEY:-}" ]; then
+            echo "No SIGNING_SECRET configured — skipping image signing (image still published, unsigned)."
+            exit 0
+          fi
           # https://github.com/containers/container-libs/issues/388
           # https://github.com/coreos/rpm-ostree/issues/5509
           # use old bundle format, so we can use newer cosign 3.X.X instead of 2.X.X

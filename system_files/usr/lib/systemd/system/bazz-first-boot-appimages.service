@@ -1,0 +1,13 @@
+[Unit]
+Description=bazz-emu-inf first-boot emulation AppImage install (ES-DE, DuckStation)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/bazz-emu-inf/appimages-installed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bazz-first-boot-appimages.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

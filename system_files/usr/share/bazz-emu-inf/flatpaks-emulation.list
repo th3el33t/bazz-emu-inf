@@ -1,8 +1,11 @@
 # Emulation Flatpaks installed on first boot by bazz-first-boot-flatpaks.service.
 # One app-id per line; blank lines and #-comments ignored.
-# Configs (RetroArch.cfg, ES-DE settings, DuckStation memory cards) are restored
+# Configs (RetroArch.cfg, DuckStation settings, ES-DE gamelists) are restored
 # from the migration backup into the data layer, not baked into the image.
-org.es_de.frontend
+#
+# Only app-ids that EXIST on Flathub belong here — a bad id fails the install.
+# Verified against `flatpak remote-ls flathub` 2026-08-30:
+#   ES-DE        -> NOT on Flathub (AppImage only; see bazz-first-boot-appimages.sh)
+#   DuckStation  -> NOT on Flathub (AppImage only; same script)
 org.libretro.RetroArch
-org.duckstation.DuckStation
 net.pcsx2.PCSX2

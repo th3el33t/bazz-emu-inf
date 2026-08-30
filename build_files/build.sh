@@ -15,7 +15,10 @@ dnf5 install -y \
 
 ### Services
 systemctl enable podman.socket
-# Installs the emulation Flatpaks (ES-DE, RetroArch, DuckStation, PCSX2) on first
-# boot, then stamps itself done. Keeps the image slim and the apps user-updatable.
+# Installs the emulation apps on first boot, then stamps itself done. Keeps the
+# image slim and the apps user-updatable. Flatpaks for what Flathub carries
+# (RetroArch, PCSX2); AppImages for what it doesn't (ES-DE, DuckStation).
 chmod +x /usr/libexec/bazz-first-boot-flatpaks.sh
+chmod +x /usr/libexec/bazz-first-boot-appimages.sh
 systemctl enable bazz-first-boot-flatpaks.service
+systemctl enable bazz-first-boot-appimages.service

@@ -13,12 +13,18 @@ AddDevice=nvidia.com/gpu=all
 # gpu-busy.sh must see host processes and TCP connections from inside the
 # container; without --pid=host the wake gate would fail open.
 PodmanArgs=--pid=host
-# Directory mounts (not single files) so a host-side edit + restart picks the
-# new inode up. Config is read at startup; restart after editing.
-Volume=/etc/llama-swap:/etc/llama-swap:ro
+# The image's entrypoint already passes -config /app/config.yaml -watch-config;
+# overriding Exec appends flags and Go keeps the FIRST -config, so instead we
+# bind our config over /app/config.yaml. Config is read at startup — after
+# editing /etc/llama-swap/config.yaml on the host, systemctl restart llama-swap
+# (the restart re-binds the file, so a host-side edit that replaced the inode
+# is picked up too).
+Volume=/etc/llama-swap/config.yaml:/app/config.yaml:ro
 Volume=/var/lib/llama-models:/models:ro
 Volume=/usr/libexec/bazz-llama:/usr/libexec/bazz-llama:ro
-Exec=/app/llama-swap -config /etc/llama-swap/config.yaml -watch-config
+# listen is a CLI-only flag (the YAML schema has no key for it); Exec appends
+# to the image entrypoint, and all three flags coexist fine.
+Exec=-listen :8085
 
 [Service]
 Restart=always

@@ -9,7 +9,12 @@
             "ghcr.io/th3el33t/bazz-emu-inf": [
                 {
                     "type": "sigstoreSigned",
-                    "keyPath": "/etc/pki/containers/fulcio.pub",
+                    "fulcio": {
+                        "caPath": "/etc/pki/containers/fulcio-intermediate-ca.crt.pem",
+                        "oidcIssuer": "https://token.actions.githubusercontent.com",
+                        "subjectEmail": "th3el33t@users.noreply.github.com"
+                    },
+                    "rekorPublicKeyPath": "/etc/pki/containers/rekor.pub",
                     "signedIdentity": {
                         "type": "matchRepository"
                     }

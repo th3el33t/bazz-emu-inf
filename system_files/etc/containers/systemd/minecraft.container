@@ -3,7 +3,7 @@ Description=Minecraft server (itzg/minecraft-server, host net :25565)
 After=bazz-minecraft-setup.service network-online.target
 
 [Container]
-Image=docker.io/itzg/minecraft-server:java21
+Image=docker.io/itzg/minecraft-server:java25
 ContainerName=minecraft
 Network=host
 Environment=EULA=TRUE TZ=America/Chicago SERVER_PORT=25565 USE_AIKAR_FLAGS=true ENABLE_AUTOPAUSE=FALSE MAX_PLAYERS=8 ENABLE_RCON=true

@@ -1,5 +1,5 @@
 [Unit]
-Description=llama-swap: on-demand Qwen3.8-27B on the RTX 4090 (port 8085)
+Description=llama-swap: on-demand Qwen3-Coder-30B-A3B on the RTX 4090 (port 8085)
 After=bazz-llama-models.service network-online.target
 Wants=network-online.target
 

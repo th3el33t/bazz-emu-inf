@@ -1,0 +1,28 @@
+[Unit]
+Description=llama-swap: on-demand Qwen3.8-27B on the RTX 4090 (port 8085)
+After=bazz-llama-models.service network-online.target
+Wants=network-online.target
+
+[Container]
+# llama-swap cuda image = ggml llama.cpp server-cuda (b10689 here) + llama-swap,
+# so llama-server is bundled at /app. Digest-pinned (2026-08-30 build).
+Image=ghcr.io/mostlygeek/llama-swap:cuda@sha256:fadd77f5b93b2347ca57fc940aa63dcdada011888e2fdb1722112a87eb8ebf95
+ContainerName=llama-swap
+Network=host
+AddDevice=nvidia.com/gpu=all
+# gpu-busy.sh must see host processes and TCP connections from inside the
+# container; without --pid=host the wake gate would fail open.
+PodmanArgs=--pid=host
+# Directory mounts (not single files) so a host-side edit + restart picks the
+# new inode up. Config is read at startup; restart after editing.
+Volume=/etc/llama-swap:/etc/llama-swap:ro
+Volume=/var/lib/llama-models:/models:ro
+Volume=/usr/libexec/bazz-llama:/usr/libexec/bazz-llama:ro
+Exec=/app/llama-swap -config /etc/llama-swap/config.yaml -watch-config
+
+[Service]
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

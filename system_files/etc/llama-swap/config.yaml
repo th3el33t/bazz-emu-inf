@@ -1,0 +1,30 @@
+# llama-swap on water-demon — Qwen3.8-27B, loaded on demand on the RTX 4090.
+# Linux port of the Windows deployment (homelab services/waterdemon/llama-swap/).
+#
+# WHY ON DEMAND. The 4090 is shared with Sunshine game-streaming and ES-DE
+# emulation, which are interactive and cannot wait for a 17 GB model to be
+# evicted. llama-swap starts it on the first request and unloads it after
+# `ttl` seconds idle, so the steady state is an empty card.
+#
+# After editing this file: `systemctl restart llama-swap` (llama-swap reads it
+# at startup; -watch-config only covers model adds/removals).
+
+healthCheckTimeout: 240   # cold start is ~10 s; the headroom is for a busy disk
+logLevel: info
+startPort: 9200           # the upstream llama-server; clients only ever see 8085
+
+models:
+  qwen3.8-27b:
+    name: "Qwen3.8-27B"
+    description: "Dense-hybrid 27B, Q4_K_XL @ 120k ctx, q4_0 KV + MTP spec decode. 49-83 tok/s."
+
+    # 15 min. Long enough that a conversation does not pay the ~10 s reload
+    # between turns, short enough that the card is free well before anyone
+    # sits down to game. The gate handles the case where they do not wait.
+    ttl: 900
+
+    # NOT llama-server directly — qwen-wake.sh checks gpu-busy.sh first and
+    # exits non-zero if a stream, gamescope session or emulator already owns
+    # the card (llama-swap reports that as a failed load to the client).
+    cmd: |
+      /usr/libexec/bazz-llama/qwen-wake.sh ${PORT}

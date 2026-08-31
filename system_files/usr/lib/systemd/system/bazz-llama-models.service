@@ -1,0 +1,14 @@
+[Unit]
+Description=bazz-emu-inf first-boot Qwen GGUF model download (~20 GB)
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=!/var/lib/bazz-emu-inf/llama-models-installed
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bazz-llama/download-models.sh
+RemainAfterExit=yes
+TimeoutStartSec=7200
+
+[Install]
+WantedBy=multi-user.target

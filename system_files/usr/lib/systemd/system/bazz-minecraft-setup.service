@@ -1,7 +1,6 @@
 [Unit]
-Description=bazz-emu-inf first-boot Minecraft env + firewall setup
+Description=bazz-emu-inf Minecraft config + first-boot firewall setup
 After=network.target
-ConditionPathExists=!/var/lib/bazz-emu-inf/minecraft-setup
 
 [Service]
 Type=oneshot

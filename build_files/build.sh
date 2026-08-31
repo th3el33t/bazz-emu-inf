@@ -60,8 +60,7 @@ systemctl enable bazz-whisperx.path
 systemctl enable bazz-whisperx.timer
 
 # Minecraft: itzg server + playit tunnel + mc-backup as quadlets on host
-# networking; env (RCON secret + pack selection) generated on-box at first
-# boot; world data under /var/lib/minecraft (data layer — restored from the
-# migration backup separately).
+# networking; private runtime env + pack selection generated separately on-box;
+# world data under /var/lib/minecraft (data layer).
 chmod +x /usr/libexec/bazz-minecraft-setup.sh
 systemctl enable bazz-minecraft-setup.service

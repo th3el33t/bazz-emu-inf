@@ -47,3 +47,14 @@ chmod +x /usr/libexec/bazz-llama/gpu-busy.sh
 chmod +x /usr/libexec/bazz-llama/qwen-wake.sh
 chmod +x /usr/libexec/bazz-llama/download-models.sh
 systemctl enable bazz-llama-models.service
+
+# WhisperX transcription: Samba [audio] drop share + a host-side path unit
+# driving one-shot whisperx containers (the maintained image is CLI-only).
+# GPU-busy defer reuses the inference layer's gpu-busy.sh predicate.
+dnf5 -y install samba
+systemctl enable smb.service
+chmod +x /usr/libexec/bazz-samba-setup.sh
+chmod +x /usr/libexec/bazz-llama/transcribe-pending.sh
+systemctl enable bazz-samba-setup.service
+systemctl enable bazz-whisperx.path
+systemctl enable bazz-whisperx.timer

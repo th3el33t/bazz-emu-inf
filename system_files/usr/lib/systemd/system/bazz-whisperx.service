@@ -1,0 +1,7 @@
+[Unit]
+Description=Transcribe audio dropped into /srv/audio/in (WhisperX, gated on GPU free)
+RequiresMountsFor=/srv/audio
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bazz-llama/transcribe-pending.sh

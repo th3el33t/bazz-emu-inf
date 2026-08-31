@@ -43,7 +43,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] Monitoring: node_exporter quadlet (`:9100`) + `nvidia_gpu_*` textfile timer (replaces the Windows exporter; same metric names, homelab alert rules unchanged)
 - [x] Sunshine streaming: native RPM (lizardbyte/stable COPR), system service, KMS capture, first-boot credential bootstrap — Moonlight pairing is the owner-verification step; per-stream gamescope app entries follow
 - [x] Local inference: llama-swap quadlet (digest-pinned, llama.cpp b10689) + on-demand Qwen3.8-27B (120k ctx, q4_0 KV, MTP draft) with the `gpu-busy.sh` wake gate; weights download+sha256-verify at first boot. Full GPU arbitration (VRAM reclaim etc.) is its own item below
-- [ ] WhisperX transcription (podman quadlet + Samba watch folder)
+- [x] WhisperX transcription: Samba `[audio]` drop share (auth set by owner via `smbpasswd`) + path-unit sweep running one-shot `jim60105/whisperx:large-v3-en` containers, deferred by the shared `gpu-busy.sh` gate
 - [ ] Minecraft server (native podman: itzg + playit + backups)
 - [ ] GPU arbitration (gate/VRAM logic rewritten from PowerShell to systemd)
 - [ ] Config + save restore from the migration backup

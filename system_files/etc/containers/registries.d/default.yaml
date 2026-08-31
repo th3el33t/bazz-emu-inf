@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/th3el33t/bazz-emu-inf:
+    use-sigstore-attachments: true

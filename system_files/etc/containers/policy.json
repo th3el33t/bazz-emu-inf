@@ -1,0 +1,20 @@
+{
+    "default": [
+        {
+            "type": "insecureAcceptAnything"
+        }
+    ],
+    "transports": {
+        "docker": {
+            "ghcr.io/th3el33t/bazz-emu-inf": [
+                {
+                    "type": "sigstoreSigned",
+                    "keyPath": "/etc/pki/containers/fulcio.pub",
+                    "signedIdentity": {
+                        "type": "matchRepository"
+                    }
+                }
+            ]
+        }
+    }
+}

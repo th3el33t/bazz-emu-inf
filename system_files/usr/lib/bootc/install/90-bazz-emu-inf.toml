@@ -1,0 +1,15 @@
+# bazz-emu-inf bootc install configuration
+#
+# Merged by bootc into the install's effective config (alphanumerical order;
+# higher filenames override lower). Requires /etc/containers/policy.json
+# (system_files/etc/containers/policy.json) to have a sigstoreSigned rule
+# for ghcr.io/th3el33t/bazz-emu-inf that points at /etc/pki/containers/fulcio.pub.
+#
+# Without this flag bootc falls back to ContainerPolicyAllowInsecure and
+# accepts any image (including unsigned) for the OS update path.
+#
+# Combined with the explicit policy rule, `bootc switch` / `bootc upgrade`
+# REFUSE to update to an unsigned or wrong-repository image of bazz-emu-inf,
+# and fall back to the previous deployment on verification failure.
+[install]
+enforce-container-sigpolicy = true

@@ -37,6 +37,8 @@ dnf5 -y copr enable lizardbyte/stable
 dnf5 -y install Sunshine
 setcap cap_sys_admin+p /usr/bin/sunshine
 chmod +x /usr/libexec/bazz-sunshine-bootstrap.sh
+chmod +x /usr/share/bazz-emu-inf/sunshine/hooks/stream-start.sh
+chmod +x /usr/share/bazz-emu-inf/sunshine/hooks/stream-end.sh
 systemctl enable bazz-sunshine-bootstrap.service
 systemctl enable sunshine.service
 

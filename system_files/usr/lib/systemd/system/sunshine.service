@@ -7,6 +7,17 @@ Wants=network-online.target
 Type=simple
 User=shrinksenpai
 SupplementaryGroups=input
+# Sunshine captures the KWin/PipeWire ScreenCast portal (capture = kwin) and
+# creates its virtual input via uinput. The unit runs as shrinksenpai but not
+# inside the graphical session, so hand it the session's Wayland env explicitly.
+Environment=WAYLAND_DISPLAY=wayland-0
+Environment=XDG_RUNTIME_DIR=/run/user/1000
+Environment=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus
+# Wait (bounded) for the autologin KWin session before starting. Without this,
+# on a cold boot Sunshine can create its uinput device before KWin binds pointer
+# BUTTON capabilities -> "cursor moves but clicks do nothing". Never fails the
+# unit. (Sunveil's documented fix for the boot input race.)
+ExecStartPre=/usr/bin/bash -lc 'for i in $(seq 1 60); do pgrep -x kwin_wayland >/dev/null && exit 0; sleep 0.5; done; exit 0'
 ExecStart=/usr/bin/sunshine
 Restart=on-failure
 RestartSec=5

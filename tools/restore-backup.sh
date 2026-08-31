@@ -49,13 +49,12 @@ push retroarch /home/shrinksenpai/.var/app/org.libretro.RetroArch/config/retroar
 # Steam userdata (Bazzite ships Steam natively); adopt-or-create on next launch
 push steam-userdata /home/shrinksenpai/.local/share/Steam/userdata
 
-# Sunshine: apps.json (per-game entries) + sunshine.conf only — the freshly
-# bootstrapped credentials and sunshine_state.json stay as they are.
-echo "== restore: sunshine apps.json + sunshine.conf"
-ssh "$BOX" "mkdir -p /home/shrinksenpai/.config/sunshine"
-scp -q "$STAGE/sunshine-config/apps.json" "$STAGE/sunshine-config/sunshine.conf" \
-    "$BOX:/home/shrinksenpai/.config/sunshine/"
-ssh "$BOX" "sudo chown shrinksenpai:shrinksenpai /home/shrinksenpai/.config/sunshine/apps.json /home/shrinksenpai/.config/sunshine/sunshine.conf && sudo systemctl restart sunshine"
+# Sunshine config is NO LONGER restored here. The Windows-era apps.json +
+# sunshine.conf in the backup drive the (Windows-only) VDD/dd_* + PowerShell
+# path and would clobber the Linux virtual-display setup. The canonical Linux
+# sunshine.conf/apps.json + Sunveil hooks now ship in the image (seeded into
+# ~/.config/sunshine by bazz-sunshine-bootstrap.sh). See README "Headless
+# streaming". Restoring them from the migration tar is intentionally dropped.
 
 # Minecraft world: extract the world tar into the quadlet's data dir.
 echo "== restore: minecraft world"

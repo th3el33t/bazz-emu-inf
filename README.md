@@ -46,7 +46,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] WhisperX transcription: Samba `[audio]` drop share (auth set by owner via `smbpasswd`) + path-unit sweep running one-shot `jim60105/whisperx:large-v3-en` containers, deferred by the shared `gpu-busy.sh` gate
 - [x] Minecraft server: itzg (`:java21`) + playit + mc-backup quadlets on host net (`:25565`); env + RCON secret generated at first boot, playit starts once the owner drops its agent key in `/etc/minecraft/env`; world restore from the migration backup is the restore item below
 - [ ] GPU arbitration (gate/VRAM logic rewritten from PowerShell to systemd)
-- [ ] Config + save restore from the migration backup
+- [x] Config + save restore: `tools/restore-backup.sh` (run from cc-homelab) pushes the migration backup into the data layer — ES-DE gamelists/settings + downloaded_media, RetroArch cfg/saves/BIOS, Steam userdata, Sunshine apps.json/sunshine.conf (not credentials), Minecraft world
 - [ ] Cosign image signing
 
 ## Install

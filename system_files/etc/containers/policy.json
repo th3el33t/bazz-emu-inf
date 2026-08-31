@@ -8,16 +8,7 @@
         "docker": {
             "ghcr.io/th3el33t/bazz-emu-inf": [
                 {
-                    "type": "sigstoreSigned",
-                    "fulcio": {
-                        "caPath": "/etc/pki/containers/fulcio-intermediate-ca.crt.pem",
-                        "oidcIssuer": "https://token.actions.githubusercontent.com",
-                        "subjectEmail": "th3el33t@users.noreply.github.com"
-                    },
-                    "rekorPublicKeyPath": "/etc/pki/containers/rekor.pub",
-                    "signedIdentity": {
-                        "type": "matchRepository"
-                    }
+                    "type": "insecureAcceptAnything"
                 }
             ]
         }

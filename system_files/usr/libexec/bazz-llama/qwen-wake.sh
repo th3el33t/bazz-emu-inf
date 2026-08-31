@@ -17,6 +17,15 @@
 # KV doubles the cache and would force ctx down to ~96k — for a coder, context
 # length beats the small KV-precision gain. 256k q4_0 / 128k q8_0 both OOM.
 #
+# --parallel 2 (two 80k slots): partitioning the fixed 160k KV across slots is
+# VRAM-free (total KV is set by --ctx-size, not --parallel), so this costs no extra
+# memory. It serves the opencode/omo `hephaestus` execution lane, which fans out —
+# two slots let a concurrent execution pair run without queueing on the one card at
+# 211 tok/s. 80k/slot stays above the tool-definition context floor (a heavy tool
+# fleet is serialized into the prompt before any work begins). Do NOT raise to 3-4
+# without trimming the agent's tools; 53k/40k per slot risks overflow. Set back to 1
+# only if a single task needs the full 160k (delegated slices are scoped, so rare).
+#
 # Sampling is Qwen's official recommendation for this model:
 # temp 0.7, top-p 0.8, top-k 20, min-p 0.0, repeat-penalty 1.05.
 set -euo pipefail
@@ -33,7 +42,7 @@ exec llama-server \
     --host 0.0.0.0 --port "$port" \
     --gpu-layers 99 --flash-attn on \
     --cache-type-k q4_0 --cache-type-v q4_0 \
-    --ctx-size 163840 --parallel 1 \
+    --ctx-size 163840 --parallel 2 \
     --jinja \
     --load-mode mmap --threads 16 --metrics \
     --temp 0.7 --top-p 0.8 --top-k 20 --min-p 0.0 --repeat-penalty 1.05

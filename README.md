@@ -50,8 +50,13 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 
 ## Install
 
-1. Boot a stock **Bazzite (KDE, NVIDIA)** USB and install to the NVMe (KDE-desktop
-   autologin, **not** Steam Gaming Mode as default).
+1. Boot a stock **Bazzite (KDE, NVIDIA)** USB and install to the NVMe (KDE desktop,
+   **not** Steam Gaming Mode as default). Autologin is baked into this image
+   (`/etc/plasmalogin.conf.d/`) — do **not** rely on the installer's autologin toggle: the
+   display manager here is KDE's **Plasma Login Manager**, which reads `plasmalogin.conf.d`,
+   not the `sddm.conf.d` the installer writes, so an installer-set autologin is silently
+   ignored and the box parks at the greeter. Sunshine can only capture once the shrinksenpai
+   session is up, so this autologin is what makes headless streaming work.
 2. Rebase onto this image:
    ```
    sudo bootc switch ghcr.io/th3el33t/bazz-emu-inf:latest

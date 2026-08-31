@@ -11,8 +11,8 @@ Environment=EULA=TRUE TZ=America/Chicago SERVER_PORT=25565 USE_AIKAR_FLAGS=true 
 # podman --env overrides --env-file, so anything the owner sets in
 # /etc/minecraft/env must NOT appear in Environment= here.
 EnvironmentFile=/etc/minecraft/env
-Volume=/var/lib/minecraft/data:/data
-Volume=/var/lib/minecraft/modpacks:/modpacks
+Volume=/var/lib/minecraft/data:/data:Z
+Volume=/var/lib/minecraft/modpacks:/modpacks:Z
 
 [Service]
 Restart=always

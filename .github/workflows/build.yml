@@ -9,6 +9,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - 'v*'
     paths-ignore:
       - '**/README.md'
   workflow_dispatch:
@@ -138,33 +140,79 @@ jobs:
 
           echo "digest=${digest}" >> $GITHUB_OUTPUT
 
-      # This section is optional and only needs to be enabled if you plan on distributing
-      # your project for others to consume. You will need to create a public and private key
-      # using Cosign and save the private key as a repository secret in Github for this workflow
-      # to consume. For more details, review the image signing section of the README.
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-        with:
-          # be careful when upgrading major versions
-          cosign-release: 'v3.1.2'
-
-      - name: Sign container image
-        id: sign-image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+      # Sign + attach SBOM attestation (keyless). Push to main AND tag pushes (v*)
+      # get signed; the box-side /etc/containers/policy.json enforces verification
+      # via a sigstoreSigned rule bound to the same workflow identity.
+      #
+      # Keyless via Sigstore public-good: the runner's `id-token: write`
+      # permission (set on this job) issues a short-lived Fulcio cert bound to
+      # the workflow identity; a Rekor transparency-log entry is written
+      # automatically. Verify with `cosign verify --certificate-identity=...
+      # --certificate-oidc-issuer=https://token.actions.githubusercontent.com`.
+      - name: Install cosign and syft
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
         env:
-          COSIGN_EXPERIMENTAL: false
-          COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
+          # renovate: datasource=github-releases depName=sigstore/cosign
+          COSIGN_VERSION: v3.1.2
+          # renovate: datasource=github-releases depName=anchore/syft
+          SYFT_VERSION: v1.27.0
+        run: |
+          set -euox pipefail
+          go install "github.com/sigstore/cosign/cmd/cosign@${COSIGN_VERSION}"
+          go install "github.com/anchore/syft/cmd/syft@${SYFT_VERSION}"
+          echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
+          cosign version
+          syft version
+
+      - name: Sign container image (keyless)
+        id: sign-image
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
+        env:
           DIGEST: ${{ steps.push-image.outputs.digest }}
         run: |
-          # Signing is optional until a cosign keypair is configured. Skip cleanly
-          # (keeps the build green) when SIGNING_SECRET has not been set yet.
-          if [ -z "${COSIGN_PRIVATE_KEY:-}" ]; then
-            echo "No SIGNING_SECRET configured — skipping image signing (image still published, unsigned)."
-            exit 0
-          fi
-          # https://github.com/containers/container-libs/issues/388
-          # https://github.com/coreos/rpm-ostree/issues/5509
-          # use old bundle format, so we can use newer cosign 3.X.X instead of 2.X.X
-          cosign sign -y --new-bundle-format=false --use-signing-config=false --key env://COSIGN_PRIVATE_KEY ${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}
+          set -euox pipefail
+          # --use-signing-config=false skips Sigstore's TUF-fetched public-good
+          # default (we're already pointing at the public-good instance via the
+          # ambient OIDC issuer). --new-bundle-format=false for rpm-ostree / bootc
+          # compatibility:
+          #   https://github.com/containers/container-libs/issues/388
+          #   https://github.com/coreos/rpm-ostree/issues/5509
+          cosign sign --yes \
+            --new-bundle-format=false \
+            --use-signing-config=false \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+
+      - name: Generate and attach SBOM attestation (CycloneDX)
+        id: attest-sbom
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
+        env:
+          DIGEST: ${{ steps.push-image.outputs.digest }}
+        run: |
+          set -euox pipefail
+          sbom="sbom.cdx.json"
+          syft "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}" -o "cyclonedx-json=${sbom}"
+          cosign attest --yes --type cyclonedx --predicate "${sbom}" \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+
+      - name: Verify signature + SBOM attestation
+        id: verify-image
+        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
+        env:
+          DIGEST: ${{ steps.push-image.outputs.digest }}
+        run: |
+          set -euox pipefail
+          # Match either a main-branch build OR a tag build (regex covers both
+          # refs/heads/main and refs/tags/v*). The box-side policy.json uses a
+          # stricter exact match; this is a sign-time sanity check.
+          id_regex='^https://github.com/th3el33t/bazz-emu-inf/\.github/workflows/build\.yml@refs/(heads/main|tags/.+)$'
+          issuer='https://token.actions.githubusercontent.com'
+          cosign verify \
+            --certificate-identity-regexp "${id_regex}" \
+            --certificate-oidc-issuer "${issuer}" \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+          cosign verify-attestation \
+            --type cyclonedx \
+            --certificate-identity-regexp "${id_regex}" \
+            --certificate-oidc-issuer "${issuer}" \
+            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
 

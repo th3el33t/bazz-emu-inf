@@ -1,5 +1,6 @@
-# llama-swap on water-demon — Qwen3.8-27B, loaded on demand on the RTX 4090.
-# Linux port of the Windows deployment (homelab services/waterdemon/llama-swap/).
+# llama-swap on water-demon — Qwen3-Coder-30B-A3B-Instruct, loaded on demand on
+# the RTX 4090. Replaced the dense Qwen3.8-27B on 2026-08-31 for higher token/s
+# (MoE: 3B active vs 27B dense) at good quality.
 #
 # WHY ON DEMAND. The 4090 is shared with Sunshine game-streaming and ES-DE
 # emulation, which are interactive and cannot wait for a 17 GB model to be
@@ -14,9 +15,9 @@ logLevel: info
 startPort: 9200           # the upstream llama-server; clients only ever see 8085
 
 models:
-  qwen3.8-27b:
-    name: "Qwen3.8-27B"
-    description: "Dense-hybrid 27B, Q4_K_XL @ 120k ctx, q4_0 KV + MTP spec decode. 49-83 tok/s."
+  qwen3-coder-30b-a3b:
+    name: "Qwen3-Coder-30B-A3B-Instruct"
+    description: "MoE coder, 30B total / 3B active, UD-Q4_K_XL @ 160k ctx, q4_0 KV. ~211 tok/s decode on code (benched 2026-08-31). Chosen for max token/s at good quality."
 
     # 15 min. Long enough that a conversation does not pay the ~10 s reload
     # between turns, short enough that the card is free well before anyone

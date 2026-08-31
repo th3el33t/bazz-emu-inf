@@ -1,9 +1,0 @@
-[Unit]
-Description=Watch /srv/audio/in for dropped audio
-
-[Path]
-DirectoryNotEmpty=/srv/audio/in
-Unit=bazz-whisperx.service
-
-[Install]
-WantedBy=multi-user.target

@@ -1,11 +1,17 @@
 [Unit]
-Description=bazz-emu-inf first-boot Qwen GGUF model download (~20 GB)
+Description=bazz-emu-inf first-boot Qwen GGUF model download (~18 GB)
 After=network-online.target
 Wants=network-online.target
 ConditionPathExists=!/var/lib/bazz-emu-inf/llama-models-installed
 
 [Service]
 Type=oneshot
+# HF_XET_HIGH_PERFORMANCE turns on the fast Xet transfer backend. The env file
+# is OPTIONAL (leading '-'): drop `HF_TOKEN=hf_...` there to lift anonymous HF
+# rate limits; without it the download still works. Secret stays out of the
+# image (two-layer rule), same pattern as /etc/minecraft/env.
+Environment=HF_XET_HIGH_PERFORMANCE=1
+EnvironmentFile=-/etc/bazz-emu-inf/hf.env
 ExecStart=/usr/libexec/bazz-llama/download-models.sh
 RemainAfterExit=yes
 TimeoutStartSec=7200

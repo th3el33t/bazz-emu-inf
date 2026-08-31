@@ -18,12 +18,17 @@ PVE_DIR=/mnt/pve/synology-vzdump/archive/waterdemon-migration-2026-08-30
 
 mkdir -p "$STAGE"
 
+SECTION=${1:-all}
+
+
 # --- fetch the config backup if not local
 if [ ! -f "$BACKUP_LOCAL" ]; then
     echo "fetching wd-backup.tar.gz from proxmox"
     ssh proxmox "cat $PVE_DIR/wd-backup.tar.gz" > "$BACKUP_LOCAL"
 fi
 
+[ "$SECTION" = all ] || [ "$SECTION" = config ] || { [ "$SECTION" = media ] && SKIP_CONFIG=1; }
+if [ "${SKIP_CONFIG:-0}" = 0 ]; then
 echo "== extracting config backup"
 tar xzf "$BACKUP_LOCAL" -C "$STAGE"
 
@@ -36,21 +41,21 @@ push() { # push <staging-path> <box-dest> — as shrinksenpai, then fix ownershi
 }
 
 # ES-DE: gamelists + settings (Linux data dir is ~/.emulationstation)
-push esde ~shrinksenpai/.emulationstation
+push esde /home/shrinksenpai/.emulationstation
 
 # RetroArch flatpak: config, saves, states, system (BIOS dumps)
-push retroarch ~shrinksenpai/.var/app/org.libretro.RetroArch/config/retroarch
+push retroarch /home/shrinksenpai/.var/app/org.libretro.RetroArch/config/retroarch
 
 # Steam userdata (Bazzite ships Steam natively); adopt-or-create on next launch
-push steam-userdata ~shrinksenpai/.local/share/Steam/userdata
+push steam-userdata /home/shrinksenpai/.local/share/Steam/userdata
 
 # Sunshine: apps.json (per-game entries) + sunshine.conf only — the freshly
 # bootstrapped credentials and sunshine_state.json stay as they are.
 echo "== restore: sunshine apps.json + sunshine.conf"
-ssh "$BOX" "mkdir -p ~shrinksenpai/.config/sunshine"
+ssh "$BOX" "mkdir -p /home/shrinksenpai/.config/sunshine"
 scp -q "$STAGE/sunshine-config/apps.json" "$STAGE/sunshine-config/sunshine.conf" \
-    "$BOX:~shrinksenpai/.config/sunshine/"
-ssh "$BOX" "sudo chown shrinksenpai:shrinksenpai ~shrinksenpai/.config/sunshine/apps.json ~shrinksenpai/.config/sunshine/sunshine.conf && sudo systemctl restart sunshine"
+    "$BOX:/home/shrinksenpai/.config/sunshine/"
+ssh "$BOX" "sudo chown shrinksenpai:shrinksenpai /home/shrinksenpai/.config/sunshine/apps.json /home/shrinksenpai/.config/sunshine/sunshine.conf && sudo systemctl restart sunshine"
 
 # Minecraft world: extract the world tar into the quadlet's data dir.
 echo "== restore: minecraft world"
@@ -61,20 +66,22 @@ ssh "$BOX" "sudo mkdir -p /var/lib/minecraft/data &&
             sudo chown -R 1000:1000 /var/lib/minecraft/data &&
             rm /tmp/minecraft-world.tar.gz"
 
+fi
+
 # ES-DE downloaded media (8.9 GB, lives only on the NAS) -> ~/ROMs/<system>/
 # ES-DE expects each system's media under the ROMs root as downloaded_media.
+# Streamed proxmox -> box directly: staging it on .51 would eat ~18 GB of the
+# small root disk (learned the hard way — 2026-08-30).
 echo "== restore: ES-DE downloaded media (this is the big one)"
-ssh proxmox "cat $PVE_DIR/esde-media.tar" > /var/tmp/wd-migration/esde-media.tar
-mkdir -p "$STAGE/media"
-tar xf /var/tmp/wd-migration/esde-media.tar -C "$STAGE/media"
-ssh "$BOX" "mkdir -p ~shrinksenpai/ROMs"
-for sys in "$STAGE/media/downloaded_media"/*/; do
+ssh "$BOX" "rm -rf /var/tmp/esde-media && mkdir -p /var/tmp/esde-media /home/shrinksenpai/ROMs"
+ssh proxmox "cat $PVE_DIR/esde-media.tar" | ssh "$BOX" "tar xf - -C /var/tmp/esde-media"
+ssh "$BOX" 'for sys in /var/tmp/esde-media/downloaded_media/*/; do
     name=$(basename "$sys")
-    dest="~shrinksenpai/ROMs/$name/downloaded_media"
-    echo "  media: $name"
-    ssh "$BOX" "mkdir -p $dest"
-    rsync -a "$sys" "$BOX:$dest/"
+    mkdir -p "/home/shrinksenpai/ROMs/$name"
+    rm -rf "/home/shrinksenpai/ROMs/$name/downloaded_media"
+    mv "$sys" "/home/shrinksenpai/ROMs/$name/downloaded_media"
 done
-ssh "$BOX" "sudo chown -R shrinksenpai:shrinksenpai ~shrinksenpai/ROMs"
+rm -rf /var/tmp/esde-media
+sudo chown -R shrinksenpai:shrinksenpai /home/shrinksenpai/ROMs'
 
 echo "== done. Owner verification: launch ES-DE, Steam, and a Moonlight session."

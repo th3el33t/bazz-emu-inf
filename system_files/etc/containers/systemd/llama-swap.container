@@ -22,6 +22,9 @@ PodmanArgs=--pid=host
 Volume=/etc/llama-swap/config.yaml:/app/config.yaml:ro
 Volume=/var/lib/llama-models:/models:ro
 Volume=/usr/libexec/bazz-llama:/usr/libexec/bazz-llama:ro
+# listen is a CLI-only flag (the YAML schema has no key for it); Exec appends
+# to the image entrypoint, and all three flags coexist fine.
+Exec=-listen :8085
 
 [Service]
 Restart=always

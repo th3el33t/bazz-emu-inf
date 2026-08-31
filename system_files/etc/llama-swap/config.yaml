@@ -9,8 +9,6 @@
 # After editing this file: `systemctl restart llama-swap` (llama-swap reads it
 # at startup; -watch-config only covers model adds/removals).
 
-listen: :8085             # the only port clients see; the upstream llama-server is on startPort
-
 healthCheckTimeout: 240   # cold start is ~10 s; the headroom is for a busy disk
 logLevel: info
 startPort: 9200           # the upstream llama-server; clients only ever see 8085

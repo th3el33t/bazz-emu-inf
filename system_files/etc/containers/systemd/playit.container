@@ -1,0 +1,17 @@
+[Unit]
+Description=playit.gg tunnel for Minecraft (outbound-only remote access)
+After=minecraft.service
+
+[Container]
+Image=ghcr.io/playit-cloud/playit-agent:0.16
+ContainerName=playit
+Network=host
+EnvironmentFile=/etc/minecraft/env
+
+# Fails once (not a crash loop) while PLAYIT_SECRET_KEY is unset — the owner
+# adds the key to /etc/minecraft/env and runs `systemctl start playit`.
+[Service]
+ExecStartPre=/bin/sh -c 'grep -q "^PLAYIT_SECRET_KEY=." /etc/minecraft/env'
+
+[Install]
+WantedBy=multi-user.target

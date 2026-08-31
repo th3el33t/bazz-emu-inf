@@ -1,0 +1,19 @@
+[Unit]
+Description=Minecraft world backups (RCON save + tar, 6h interval, keep 3)
+After=minecraft.service
+
+[Container]
+Image=docker.io/itzg/mc-backup:latest
+ContainerName=mc-backup
+Network=host
+Environment=TZ=America/Chicago BACKUP_INTERVAL=6h PRUNE_BACKUPS_COUNT=3 RCON_HOST=localhost INITIAL_DELAY=120 DEST_DIR=/backups
+EnvironmentFile=/etc/minecraft/env
+Volume=/var/lib/minecraft/data:/data:ro
+Volume=/var/lib/minecraft/backups:/backups
+
+[Service]
+Restart=always
+RestartSec=30
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,12 @@
+[Unit]
+Description=bazz-emu-inf first-boot Minecraft env + firewall setup
+After=network.target
+ConditionPathExists=!/var/lib/bazz-emu-inf/minecraft-setup
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/bazz-minecraft-setup.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

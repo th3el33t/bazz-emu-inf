@@ -9,7 +9,8 @@ stamp=/var/lib/bazz-emu-inf/sunshine-creds-seeded
 mkdir -p "$(dirname "$stamp")" /etc/sunshine
 
 user=shrinksenpai
-pass=$(tr -dc 'A-Za-z0-9' </dev/urandom | head -c 24)
+pass=$(tr -dc 'A-Za-z0-9' </dev/urandom 2>/dev/null | head -c 24 || true)
+[ -n "$pass" ] || { echo "password generation produced empty string" >&2; exit 1; }
 
 # --creds can keep running the server after writing credentials; bound it and
 # only require that the state file appears.

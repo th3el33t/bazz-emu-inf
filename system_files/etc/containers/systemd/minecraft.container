@@ -1,0 +1,22 @@
+[Unit]
+Description=Minecraft server (itzg/minecraft-server, host net :25565)
+After=bazz-minecraft-setup.service network-online.target
+
+[Container]
+Image=docker.io/itzg/minecraft-server:java21
+ContainerName=minecraft
+Network=host
+Environment=EULA=TRUE TZ=America/Chicago SERVER_PORT=25565 USE_AIKAR_FLAGS=true ENABLE_AUTOPAUSE=FALSE MAX_PLAYERS=8 ENABLE_RCON=true
+# Pack selection (TYPE/VERSION/MEMORY/...) + secrets come from the env file.
+# podman --env overrides --env-file, so anything the owner sets in
+# /etc/minecraft/env must NOT appear in Environment= here.
+EnvironmentFile=/etc/minecraft/env
+Volume=/var/lib/minecraft/data:/data
+Volume=/var/lib/minecraft/modpacks:/modpacks
+
+[Service]
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

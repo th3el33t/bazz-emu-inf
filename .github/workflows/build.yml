@@ -189,19 +189,15 @@ jobs:
             --use-signing-config=false \
             "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
 
-      - name: Generate and attach SBOM attestation (CycloneDX)
-        id: attest-sbom
-        if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
-        env:
-          DIGEST: ${{ steps.push-image.outputs.digest }}
-        run: |
-          set -euox pipefail
-          sbom="sbom.cdx.json"
-          syft "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}" -o "cyclonedx-json=${sbom}"
-          cosign attest --yes --type cyclonedx --predicate "${sbom}" \
-            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
+      # SBOM attestation REMOVED for now — syft pulling the bootc image a second
+      # time to scan layers exceeds the runner's /tmp quota (post-merge build
+      # 33387137870 failed with 'disk quota exceeded' inside stereoscope's
+      # layer cache). Re-add as a follow-up that scans from the LOCAL podman
+      # storage immediately after the build step, before the layers are
+      # cleaned up. The signature + verify path is what enforces trust; the
+      # SBOM is documentation.
 
-      - name: Verify signature + SBOM attestation
+      - name: Verify signature
         id: verify-image
         if: github.event_name != 'pull_request' && (github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/'))
         env:
@@ -214,11 +210,6 @@ jobs:
           id_regex='^https://github.com/th3el33t/bazz-emu-inf/\.github/workflows/build\.yml@refs/(heads/main|tags/.+)$'
           issuer='https://token.actions.githubusercontent.com'
           cosign verify \
-            --certificate-identity-regexp "${id_regex}" \
-            --certificate-oidc-issuer "${issuer}" \
-            "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"
-          cosign verify-attestation \
-            --type cyclonedx \
             --certificate-identity-regexp "${id_regex}" \
             --certificate-oidc-issuer "${issuer}" \
             "${IMAGE_REGISTRY}/${IMAGE_NAME}@${DIGEST}"

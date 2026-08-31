@@ -1,0 +1,10 @@
+[Unit]
+Description=Retry deferred WhisperX transcriptions (fires the pending sweep)
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=5min
+Unit=bazz-whisperx.service
+
+[Install]
+WantedBy=timers.target

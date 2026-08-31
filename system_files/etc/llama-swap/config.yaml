@@ -17,7 +17,7 @@ startPort: 9200           # the upstream llama-server; clients only ever see 808
 models:
   qwen3-coder-30b-a3b:
     name: "Qwen3-Coder-30B-A3B-Instruct"
-    description: "MoE coder, 30B total / 3B active, UD-Q4_K_XL @ 160k ctx, q4_0 KV. ~211 tok/s decode on code (benched 2026-08-31). Chosen for max token/s at good quality."
+    description: "MoE coder, 30B total / 3B active, UD-Q4_K_XL @ 160k ctx (2x80k slots, --parallel 2), q4_0 KV. ~211 tok/s decode on code (benched 2026-08-31). Chosen for max token/s at good quality; serves the opencode/omo execution lane."
 
     # 15 min. Long enough that a conversation does not pay the ~10 s reload
     # between turns, short enough that the card is free well before anyone

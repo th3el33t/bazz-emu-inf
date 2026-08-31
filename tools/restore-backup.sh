@@ -61,8 +61,12 @@ ssh "$BOX" "sudo chown shrinksenpai:shrinksenpai /home/shrinksenpai/.config/suns
 echo "== restore: minecraft world"
 tar tzf "$STAGE/minecraft/minecraft-world.tar.gz" >/dev/null  # sanity: readable tar
 scp -q "$STAGE/minecraft/minecraft-world.tar.gz" "$BOX:/tmp/minecraft-world.tar.gz"
+# The tar wraps the whole /opt/minecraft tree (compose.yaml + data/) — flatten
+# so the world lands directly in the quadlet's data dir.
 ssh "$BOX" "sudo mkdir -p /var/lib/minecraft/data &&
             sudo tar xzf /tmp/minecraft-world.tar.gz -C /var/lib/minecraft/data &&
+            sudo bash -c 'shopt -s dotglob; mv /var/lib/minecraft/data/data/* /var/lib/minecraft/data/ &&
+                            rmdir /var/lib/minecraft/data/data; rm -f /var/lib/minecraft/data/compose.yaml' &&
             sudo chown -R 1000:1000 /var/lib/minecraft/data &&
             rm /tmp/minecraft-world.tar.gz"
 

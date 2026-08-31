@@ -42,7 +42,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] Emulation apps: RetroArch + PCSX2 (first-boot Flatpaks); ES-DE + DuckStation (first-boot AppImages — neither exists on Flathub)
 - [x] Monitoring: node_exporter quadlet (`:9100`) + `nvidia_gpu_*` textfile timer (replaces the Windows exporter; same metric names, homelab alert rules unchanged)
 - [x] Sunshine streaming: native RPM (lizardbyte/stable COPR), system service, KMS capture, first-boot credential bootstrap — Moonlight pairing is the owner-verification step; per-stream gamescope app entries follow
-- [ ] Local inference: llama.cpp (CUDA) + llama-swap + Qwen, as podman quadlets with a GPU gate
+- [x] Local inference: llama-swap quadlet (digest-pinned, llama.cpp b10689) + on-demand Qwen3.8-27B (120k ctx, q4_0 KV, MTP draft) with the `gpu-busy.sh` wake gate; weights download+sha256-verify at first boot. Full GPU arbitration (VRAM reclaim etc.) is its own item below
 - [ ] WhisperX transcription (podman quadlet + Samba watch folder)
 - [ ] Minecraft server (native podman: itzg + playit + backups)
 - [ ] GPU arbitration (gate/VRAM logic rewritten from PowerShell to systemd)

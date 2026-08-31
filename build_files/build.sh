@@ -39,3 +39,11 @@ setcap cap_sys_admin+p /usr/bin/sunshine
 chmod +x /usr/libexec/bazz-sunshine-bootstrap.sh
 systemctl enable bazz-sunshine-bootstrap.service
 systemctl enable sunshine.service
+
+# Local inference: llama-swap (on-demand Qwen3.8-27B behind a wake gate) as a
+# podman quadlet. Weights are the data layer — download-models.sh fetches and
+# sha256-verifies them from HuggingFace on first boot.
+chmod +x /usr/libexec/bazz-llama/gpu-busy.sh
+chmod +x /usr/libexec/bazz-llama/qwen-wake.sh
+chmod +x /usr/libexec/bazz-llama/download-models.sh
+systemctl enable bazz-llama-models.service

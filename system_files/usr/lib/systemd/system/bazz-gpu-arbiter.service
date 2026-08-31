@@ -1,0 +1,14 @@
+[Unit]
+Description=GPU arbiter: evict resident inference when a human claims the 4090
+# Only meaningful once llama-swap can answer /running and /unload.
+After=llama-swap.service
+Wants=llama-swap.service
+
+[Service]
+Type=simple
+ExecStart=/usr/libexec/bazz-llama/gpu-arbiter.sh
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

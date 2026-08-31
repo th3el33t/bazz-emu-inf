@@ -20,6 +20,7 @@ for f in /srv/audio/in/*; do
     if podman run --rm --device nvidia.com/gpu=all \
         -v /srv/audio:/srv/audio:Z \
         ghcr.io/jim60105/whisperx:large-v3-en \
+        -- \
         --output_dir /srv/audio/out --output_format all \
         --compute_type float16 --batch_size 8 \
         "/srv/audio/in/$base"; then

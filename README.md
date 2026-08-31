@@ -46,7 +46,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] Minecraft server: itzg (`:java25`) + playit + mc-backup quadlets on host net (`:25565`); secrets live in `/etc/minecraft/env`, pack selection in `/etc/minecraft/pack.env`, and playit starts once the owner drops its agent key in the private env file
 - [x] GPU arbitration: `gpu-arbiter.sh` service polls the shared `gpu-busy.sh` predicate and evicts a resident model (llama-swap `/unload`) within ~3 s of a stream/game/emulator claiming the card — the Windows VRAM-Reclaim replacement; the load-side gate (`qwen-wake.sh`) was already in the inference layer
 - [x] Config + save restore: `tools/restore-backup.sh` (run from cc-homelab) pushes the migration backup into the data layer — ES-DE gamelists/settings + downloaded_media, RetroArch cfg/saves/BIOS, Steam userdata, Sunshine apps.json/sunshine.conf (not credentials), Minecraft world
-- [ ] Cosign image signing
+- [x] Cosign image signing: keyless (Sigstore Fulcio + Rekor) via GH Actions OIDC on push to main + `v*` tags; workflow identity bound to `…/.github/workflows/build.yml@refs/heads/main`. Box-side enforcement via `/etc/containers/policy.json` (sigstoreSigned rule, keyPath `/etc/pki/containers/fulcio.pub` — public-good Fulcio root, sha256 `03:A3:8F:…D0`) + `enforce-container-sigpolicy = true` in `/usr/lib/bootc/install/90-bazz-emu-inf.toml`. `bootc upgrade` / `bootc switch` refuse unsigned images of this repo; mismatch rolls back to the previous signed deployment. SBOM attestation (CycloneDX) is a follow-up — syft disk quota on bootc images.
 
 ## Install
 

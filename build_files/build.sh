@@ -46,7 +46,11 @@ systemctl enable sunshine.service
 chmod +x /usr/libexec/bazz-llama/gpu-busy.sh
 chmod +x /usr/libexec/bazz-llama/qwen-wake.sh
 chmod +x /usr/libexec/bazz-llama/download-models.sh
+chmod +x /usr/libexec/bazz-llama/gpu-arbiter.sh
 systemctl enable bazz-llama-models.service
+# Evicts a resident model the moment a human workload claims the card (the
+# Windows VRAM-Reclaim replacement). Reuses gpu-busy.sh as the busy predicate.
+systemctl enable bazz-gpu-arbiter.service
 
 # WhisperX transcription: Samba [audio] drop share + a host-side path unit
 # driving one-shot whisperx containers (the maintained image is CLI-only).

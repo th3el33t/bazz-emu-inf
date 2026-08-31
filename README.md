@@ -45,7 +45,7 @@ Keeping BIOS/ROMs/secrets out is also what makes publishing the image **public**
 - [x] Local inference: llama-swap quadlet (digest-pinned, llama.cpp b10689) + on-demand Qwen3.8-27B (120k ctx, q4_0 KV, MTP draft) with the `gpu-busy.sh` wake gate; weights download+sha256-verify at first boot. Full GPU arbitration (VRAM reclaim etc.) is its own item below
 - [x] WhisperX transcription: Samba `[audio]` drop share (auth set by owner via `smbpasswd`) + path-unit sweep running one-shot `jim60105/whisperx:large-v3-en` containers, deferred by the shared `gpu-busy.sh` gate
 - [x] Minecraft server: itzg (`:java25`) + playit + mc-backup quadlets on host net (`:25565`); secrets live in `/etc/minecraft/env`, pack selection in `/etc/minecraft/pack.env`, and playit starts once the owner drops its agent key in the private env file
-- [ ] GPU arbitration (gate/VRAM logic rewritten from PowerShell to systemd)
+- [x] GPU arbitration: `gpu-arbiter.sh` service polls the shared `gpu-busy.sh` predicate and evicts a resident model (llama-swap `/unload`) within ~3 s of a stream/game/emulator claiming the card — the Windows VRAM-Reclaim replacement; the load-side gate (`qwen-wake.sh`) was already in the inference layer
 - [x] Config + save restore: `tools/restore-backup.sh` (run from cc-homelab) pushes the migration backup into the data layer — ES-DE gamelists/settings + downloaded_media, RetroArch cfg/saves/BIOS, Steam userdata, Sunshine apps.json/sunshine.conf (not credentials), Minecraft world
 - [ ] Cosign image signing
 

@@ -17,7 +17,7 @@ mkdir -p "$(dirname "$stamp")" "$dir/MTP"
 declare -A sums
 while IFS=$'\t' read -r name sha; do
     sums[$name]=$sha
-done < <(curl -fsSL "https://huggingface.co/api/models/$repo?expand[]=siblings" | python3 -c '
+done < <(curl -fsSL "https://huggingface.co/api/models/$repo?blobs=true" | python3 -c '
 import json, sys
 for f in json.load(sys.stdin)["siblings"]:
     lfs = f.get("lfs") or {}

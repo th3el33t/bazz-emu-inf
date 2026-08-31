@@ -11,7 +11,7 @@ Environment=EULA=TRUE TZ=America/Chicago SERVER_PORT=25565 USE_AIKAR_FLAGS=true 
 # isolated in pack.env so changing packs never touches secrets.
 EnvironmentFile=/etc/minecraft/env
 EnvironmentFile=/etc/minecraft/pack.env
-Volume=/var/lib/minecraft/data:/data:Z
+Volume=/var/lib/minecraft/data:/data:z
 Volume=/var/lib/minecraft/modpacks:/modpacks:Z
 
 [Service]

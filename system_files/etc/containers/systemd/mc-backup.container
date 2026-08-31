@@ -8,7 +8,7 @@ ContainerName=mc-backup
 Network=host
 Environment=TZ=America/Chicago BACKUP_INTERVAL=6h PRUNE_BACKUPS_COUNT=3 RCON_HOST=localhost INITIAL_DELAY=120 DEST_DIR=/backups
 EnvironmentFile=/etc/minecraft/env
-Volume=/var/lib/minecraft/data:/data:ro,Z
+Volume=/var/lib/minecraft/data:/data:ro,z
 Volume=/var/lib/minecraft/backups:/backups:Z
 
 [Service]

@@ -115,6 +115,7 @@ as permanent protection for an old pack.
 ```bash
 (
   set -eu
+  NEW_PACK_ENV=
   : "${NEW_PACK_ENV:?set NEW_PACK_ENV to the prepared pack.env file}"
   swap_id=$(date -u +%Y%m%dT%H%M%SZ)
   base=/var/lib/minecraft

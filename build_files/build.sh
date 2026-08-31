@@ -41,6 +41,9 @@ chmod +x /usr/share/bazz-emu-inf/sunshine/hooks/stream-start.sh
 chmod +x /usr/share/bazz-emu-inf/sunshine/hooks/stream-end.sh
 systemctl enable bazz-sunshine-bootstrap.service
 systemctl enable sunshine.service
+# ydotool uinput daemon: lets an operator drive the desktop UIs (ES-DE/RetroArch/
+# DuckStation first-run) over SSH on this headless Wayland box.
+systemctl enable ydotoold.service
 
 # Local inference: llama-swap (on-demand Qwen3-Coder-30B-A3B-Instruct behind a
 # wake gate) as a podman quadlet. Weights are the data layer — download-models.sh

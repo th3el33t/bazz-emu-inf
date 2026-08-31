@@ -1,14 +1,15 @@
 #!/bin/bash
-# restore-backup.sh — push the Windows-era config/save migration backup onto
-# the Bazzite box. Run from cc-homelab (.51):
+# restore-backup.sh — push the migration backup + emulation library onto the
+# Bazzite box. Run from cc-homelab (.51):
 #
 #   ( set -eu
 #     : "${BOX:?}"      # e.g. BOX=waterdemon
 #     tools/restore-backup.sh )
 #
-# Sources (in order): /var/tmp/wd-migration on .51, else the NAS copy mounted
-# on the Proxmox host. Idempotent: rsync without --delete, safe to re-run.
-# Not an image layer — this restores the DATA layer (two-layer rule).
+# Config/saves come from the migration tar on the NAS (via Proxmox). The
+# emulation library (ROMs, gamelists, BIOS) comes from the NAS ROMS share, which
+# the box NFS-mounts directly. Idempotent (rsync without --delete). Not an image
+# layer — this restores the DATA layer (two-layer rule).
 set -euo pipefail
 
 BOX=${BOX:-waterdemon}
@@ -40,10 +41,9 @@ push() { # push <staging-path> <box-dest> — as shrinksenpai, then fix ownershi
     ssh "$BOX" "sudo chown -R shrinksenpai:shrinksenpai '$dest'"
 }
 
-# ES-DE: gamelists + settings (Linux data dir is ~/.emulationstation)
-push esde /home/shrinksenpai/.emulationstation
-
-# RetroArch flatpak: config, saves, states, system (BIOS dumps)
+# RetroArch flatpak: saves/states from the migration backup. (Cores + BIOS are
+# installed fresh below — do NOT expect the Windows retroarch.cfg here to be
+# valid on Linux; ES-DE drives core selection.)
 push retroarch /home/shrinksenpai/.var/app/org.libretro.RetroArch/config/retroarch
 
 # Steam userdata (Bazzite ships Steam natively); adopt-or-create on next launch
@@ -71,20 +71,77 @@ ssh "$BOX" "sudo mkdir -p /var/lib/minecraft/data &&
 
 fi
 
-# ES-DE downloaded media (8.9 GB, lives only on the NAS) -> ~/ROMs/<system>/
-# ES-DE expects each system's media under the ROMs root as downloaded_media.
-# Streamed proxmox -> box directly: staging it on .51 would eat ~18 GB of the
-# small root disk (learned the hard way — 2026-08-30).
-echo "== restore: ES-DE downloaded media (this is the big one)"
-ssh "$BOX" "rm -rf /var/tmp/esde-media && mkdir -p /var/tmp/esde-media /home/shrinksenpai/ROMs"
+# --- ES-DE emulation library (ROMs + gamelists + media + BIOS + cores) --------
+# ES-DE 3.4 reads ~/ES-DE (NOT the legacy ~/.emulationstation, and NOT
+# ~/.config/ES-DE). The ROM library + curated metadata + BIOS live on the NAS
+# (192.168.86.245:/volume1/ROMS, exported to the box); the 8.9 GB of scraped
+# media is streamed from the migration tar. Layout mirrors the gtr9 rig
+# documented in ROMS/Curated/RESTORE.md.
+echo "== restore: ES-DE downloaded media (8.9 GB) -> ~/ES-DE/downloaded_media"
+# Stream the tar straight to the box (staging on .51 would eat ~18 GB of the
+# small root disk — learned 2026-08-30). Media goes to <MediaDir>/<system>/,
+# where MediaDir defaults to ~/ES-DE/downloaded_media — NOT under ~/ROMs.
+ssh "$BOX" "rm -rf /var/tmp/esde-media && mkdir -p /var/tmp/esde-media /home/shrinksenpai/ES-DE/downloaded_media"
 ssh proxmox "cat $PVE_DIR/esde-media.tar" | ssh "$BOX" "tar xf - -C /var/tmp/esde-media"
 ssh "$BOX" 'for sys in /var/tmp/esde-media/downloaded_media/*/; do
     name=$(basename "$sys")
-    mkdir -p "/home/shrinksenpai/ROMs/$name"
-    rm -rf "/home/shrinksenpai/ROMs/$name/downloaded_media"
-    mv "$sys" "/home/shrinksenpai/ROMs/$name/downloaded_media"
+    rm -rf "/home/shrinksenpai/ES-DE/downloaded_media/$name"
+    mv "$sys" "/home/shrinksenpai/ES-DE/downloaded_media/$name"
 done
 rm -rf /var/tmp/esde-media
-sudo chown -R shrinksenpai:shrinksenpai /home/shrinksenpai/ROMs'
+sudo chown -R shrinksenpai:shrinksenpai /home/shrinksenpai/ES-DE'
+
+echo "== restore: ROMs + gamelists + BIOS + libretro cores (from NAS ROMS)"
+# All of this runs on the box: it NFS-mounts the NAS ROMS share and works from
+# there. rsync runs as shrinksenpai — the Synology squashes root, so a root
+# rsync of the share fails Permission denied.
+ssh "$BOX" 'set -e
+NAS=192.168.86.245:/volume1/ROMS
+MNT=/mnt/nas-roms
+sudo mkdir -p "$MNT"
+mountpoint -q "$MNT" || sudo mount -t nfs -o ro,soft,timeo=100 "$NAS" "$MNT"
+
+H=/home/shrinksenpai
+RA="$H/.var/app/org.libretro.RetroArch/config/retroarch"
+PCSX2="$H/.var/app/net.pcsx2.PCSX2/config/PCSX2/bios"
+DS="$H/.local/share/duckstation/bios"
+
+# ROMs: ~80 GB curated 1g1r set. Exclude any media/gamelists baked alongside.
+sudo -u shrinksenpai rsync -a --exclude=downloaded_media --exclude=gamelist.xml \
+    "$MNT/Curated/roms/" "$H/ROMs/"
+
+# gamelists + collections (coherent with the curated ROM set)
+sudo -u shrinksenpai mkdir -p "$H/ES-DE/gamelists" "$H/ES-DE/collections"
+sudo -u shrinksenpai cp -a "$MNT/Curated/metadata/gamelists/." "$H/ES-DE/gamelists/"
+sudo -u shrinksenpai cp -a "$MNT/Curated/metadata/collections/." "$H/ES-DE/collections/" 2>/dev/null || true
+
+# BIOS -> RetroArch system + DuckStation (PS1) + PCSX2 (PS2)
+sudo -u shrinksenpai mkdir -p "$RA/system" "$DS" "$PCSX2"
+sudo -u shrinksenpai cp -a "$MNT/Curated/BIOS/." "$RA/system/"
+for b in "$MNT"/Curated/BIOS/scph550?.bin; do [ -e "$b" ] && sudo -u shrinksenpai cp -a "$b" "$DS/"; done
+[ -f "$RA/system/ps2-0230a-20080220.bin" ] && sudo -u shrinksenpai cp -a "$RA/system/ps2-0230a-20080220.bin" "$PCSX2/" || true
+
+# libretro cores — ES-DE defaults for the systems present, from the buildbot
+CORES="$RA/cores"; BB=https://buildbot.libretro.com/nightly/linux/x86_64/latest
+sudo -u shrinksenpai mkdir -p "$CORES"
+for c in snes9x mesen gambatte mgba genesis_plus_gx picodrive mupen64plus_next \
+         mednafen_pce mednafen_supergrafx mednafen_wswan mednafen_ngp mednafen_vb \
+         handy stella a5200 prosystem pokemini mednafen_psx_hw; do
+    [ -f "$CORES/${c}_libretro.so" ] && continue
+    if curl -fsSL "$BB/${c}_libretro.so.zip" -o /tmp/$c.zip 2>/dev/null; then
+        sudo -u shrinksenpai unzip -o /tmp/$c.zip -d "$CORES" >/dev/null 2>&1 || true
+    fi
+    rm -f /tmp/$c.zip
+done
+
+# point ES-DE at the ROM dir (empty value shows "no games / import failed")
+sudo -u shrinksenpai sed -i \
+    "s|<string name=\"ROMDirectory\" value=\"[^\"]*\" />|<string name=\"ROMDirectory\" value=\"$H/ROMs\" />|" \
+    "$H/ES-DE/settings/es_settings.xml"
+
+sudo chown -R shrinksenpai:shrinksenpai "$H/ROMs" "$H/ES-DE"
+sudo umount "$MNT" 2>/dev/null || true
+echo "ES-DE restore complete"
+'
 
 echo "== done. Owner verification: launch ES-DE, Steam, and a Moonlight session."

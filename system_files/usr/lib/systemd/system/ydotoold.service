@@ -1,0 +1,18 @@
+[Unit]
+Description=ydotool uinput daemon (headless computer-use for owner/agent remote control)
+Documentation=man:ydotoold(8)
+After=systemd-user-sessions.service
+
+[Service]
+Type=simple
+# Runs as root: /dev/uinput is root:input 0660. The socket is 0660 root:root, so
+# only root (i.e. an authenticated sudo/SSH session) can inject input — acceptable
+# on this single-user LAN box, which already injects input via Sunshine. Lets an
+# operator drive ES-DE/RetroArch/DuckStation first-run UIs over SSH:
+#   sudo YDOTOOL_SOCKET=/run/ydotool.sock ydotool mousemove/click/type ...
+ExecStart=/usr/bin/ydotoold --socket-path=/run/ydotool.sock --socket-perm=0660
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

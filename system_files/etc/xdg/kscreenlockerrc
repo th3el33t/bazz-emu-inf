@@ -1,0 +1,7 @@
+# Headless streaming/inference box: never auto-lock the desktop. An idle lock
+# blocks Moonlight streams and remote (ydotool) computer-use behind a password
+# prompt with no local keyboard to clear it. System-wide KDE default; a user
+# ~/.config/kscreenlockerrc still overrides if someone wants locking back.
+[Daemon]
+Autolock=false
+LockOnResume=false

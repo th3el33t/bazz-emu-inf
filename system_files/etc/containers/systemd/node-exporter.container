@@ -7,18 +7,24 @@ ContainerName=node-exporter
 Network=host
 Volume=/:/host:ro,rslave
 Volume=/var/lib/node_exporter/textfile:/textfile:ro,z
-# systemd collector: exports node_systemd_unit_state, which the homelab
-# Prometheus rule SystemdUnitFailed watches and SystemdMetricsMissing guards.
-# The reflash to this image dropped it (containerised node_exporter has no host
-# systemd), so .40 exported zero unit metrics and SystemdMetricsMissing fired.
-# The collector talks to systemd over its D-Bus PRIVATE socket at
-# /run/systemd/private, so that dir is mounted in; SecurityLabelDisable lets the
-# container connect to it under SELinux enforcing (acceptable — this container
-# already ro-mounts all of / for host metrics). VALIDATE after the first boot on
-# this image: `curl -s localhost:9100/metrics | grep -c node_systemd_unit_state`
-# must be >0, and `systemctl --failed` on the host should match what Prometheus sees.
+# systemd collector: exports node_systemd_unit_state, which the homelab Prometheus
+# rule SystemdUnitFailed watches and SystemdMetricsMissing guards. The reflash to
+# this image dropped it (a containerised node_exporter has no host systemd), so .40
+# exported zero unit metrics and SystemdMetricsMissing fired.
+#
+# node_exporter v1.12.1 reaches systemd over the D-Bus SYSTEM BUS, which it dials at
+# the ABSOLUTE path /var/run/dbus/system_bus_socket (NOT systemd's private socket).
+# This minimal image has no /var/run -> /run symlink, so the host socket must be
+# mounted at exactly that path: host /run/dbus -> container /var/run/dbus. Mounting
+# it at /run/dbus (the "correct" path) silently exports 0 series — the collector
+# never looks there. SecurityLabelDisable lets the container connect under SELinux
+# enforcing (acceptable: it already ro-mounts all of / for host metrics).
+#
+# Verified live 2026-09-01: 1770 node_systemd_unit_state series. If it ever exports
+# 0 again, `podman logs node-exporter | grep systemd` shows the dbus dial error —
+# check that before touching anything else.
 SecurityLabelDisable=true
-Volume=/run/systemd:/run/systemd:ro
+Volume=/run/dbus:/var/run/dbus:ro
 Exec=--path.rootfs=/host --collector.textfile.directory=/textfile --collector.systemd
 
 [Service]

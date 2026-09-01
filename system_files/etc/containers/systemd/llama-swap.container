@@ -25,6 +25,13 @@ Volume=/usr/libexec/bazz-llama:/usr/libexec/bazz-llama:ro
 # listen is a CLI-only flag (the YAML schema has no key for it); Exec appends
 # to the image entrypoint, and all three flags coexist fine.
 Exec=-listen :8085
+# The upstream image bakes a HEALTHCHECK that curls :8080 — the on-demand UPSTREAM
+# llama-server, which is DOWN whenever no model is loaded. So the container reads
+# "unhealthy" the whole time it sits idle, and its transient podman-healthcheck unit
+# trips the fleet SystemdUnitFailed rule for a service that is actually fine. Point
+# the check at llama-swap's OWN listener (:8085/health), which returns 200 even with
+# no model loaded. Verified 2026-09-01.
+HealthCmd=curl -f http://localhost:8085/health
 
 [Service]
 Restart=always

@@ -115,6 +115,15 @@ sudo -u shrinksenpai mkdir -p "$H/ES-DE/gamelists" "$H/ES-DE/collections"
 sudo -u shrinksenpai cp -a "$MNT/Curated/metadata/gamelists/." "$H/ES-DE/gamelists/"
 sudo -u shrinksenpai cp -a "$MNT/Curated/metadata/collections/." "$H/ES-DE/collections/" 2>/dev/null || true
 
+# The curated gamelists/collections were authored on the gtr9 rig with ABSOLUTE
+# /srv/roms/<system>/... paths baked into every <path>/<rom> entry. This box keeps
+# ROMs under ~/ROMs (see ROMDirectory below), so without rewriting the prefix ES-DE
+# resolves ZERO gamelist entries — it still shows the games (from the ROM scan) but
+# drops all scraped names/metadata/artwork. That is the "import failed" symptom.
+# Media resolves by ROM basename, so a prefix rewrite is all that's needed.
+sudo -u shrinksenpai find "$H/ES-DE/gamelists" "$H/ES-DE/collections" -type f \
+    \( -name "*.xml" -o -name "*.cfg" \) -exec sed -i "s|/srv/roms/|$H/ROMs/|g" {} +
+
 # BIOS -> RetroArch system + DuckStation (PS1) + PCSX2 (PS2)
 sudo -u shrinksenpai mkdir -p "$RA/system" "$DS" "$PCSX2"
 sudo -u shrinksenpai cp -a "$MNT/Curated/BIOS/." "$RA/system/"

@@ -22,16 +22,18 @@ PodmanArgs=--pid=host
 Volume=/etc/llama-swap/config.yaml:/app/config.yaml:ro
 Volume=/var/lib/llama-models:/models:ro
 Volume=/usr/libexec/bazz-llama:/usr/libexec/bazz-llama:ro
+Volume=/etc/bazz-llama:/etc/bazz-llama:ro
 # listen is a CLI-only flag (the YAML schema has no key for it); Exec appends
 # to the image entrypoint, and all three flags coexist fine.
 Exec=-listen :8085
-# The upstream image bakes a HEALTHCHECK that curls :8080 — the on-demand UPSTREAM
-# llama-server, which is DOWN whenever no model is loaded. So the container reads
-# "unhealthy" the whole time it sits idle, and its transient podman-healthcheck unit
-# trips the fleet SystemdUnitFailed rule for a service that is actually fine. Point
-# the check at llama-swap's OWN listener (:8085/health), which returns 200 even with
-# no model loaded. Verified 2026-09-01.
-HealthCmd=curl -f http://localhost:8085/health
+# Healthcheck: the upstream image bakes one that curls :8080 (the on-demand
+# UPSTREAM llama-server, down whenever no model is loaded) → perma-unhealthy while
+# idle. A bare curl of llama-swap's own :8085/health fixed that but is still
+# false-HEALTHY when a loaded model wedges (ErrorDeviceLost) — /health 200s while
+# every real request fails. healthcheck.sh does both: proxy /health, plus a real
+# 1-token generation against any READY model (idle-safe: no probe when nothing is
+# loaded, so it never forces a load / fights the GPU arbiter). See the script.
+HealthCmd=/bin/sh /etc/bazz-llama/healthcheck.sh
 
 [Service]
 Restart=always

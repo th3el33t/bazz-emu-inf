@@ -4,3 +4,6 @@ output
 _build-*/**
 *_chunkah_*
 *_rpm-ostree_*
+
+# serena editor cache + local project config (local tooling, not part of the image)
+.serena/

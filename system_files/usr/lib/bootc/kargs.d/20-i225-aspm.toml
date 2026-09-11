@@ -1,0 +1,10 @@
+# Disable PCIe ASPM globally to work around the Intel I225-V (onboard 2.5GbE,
+# igc driver) "PCIe link lost, device now detached" hardware bug. On 2026-09-01
+# this NIC dropped off the PCIe bus mid-stream and hard-froze the box (igc_rd32
+# "Failed to read reg 0xc030!", igc_watchdog_task WARNING). ASPM L1 entry is the
+# documented trigger for the I225/I226 detach, and it fires at IDLE too, not just
+# under load — so this protects even though the live cable was moved to the
+# Aquantia AQC113 10GbE port (enp6s0). Community-consensus fix; the small idle
+# power cost on NVMe/GPU is irrelevant on an always-on box. Remove only if the
+# I225 is physically removed/disabled.
+kargs = ["pcie_aspm=off"]

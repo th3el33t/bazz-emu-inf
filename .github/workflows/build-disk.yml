@@ -98,7 +98,12 @@ jobs:
           image: ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           chown: ${{ env.USER_UID }}:${{ env.USER_GID }}
           types: ${{ matrix.disk-type }}
-          additional-args: --use-librepo=True
+          # --rootfs=btrfs mirrors the repo's own `just _build-bib`, which already
+          # passes it. bootc-image-builder stopped inferring the filesystem: on
+          # `:latest` it now aborts with "no default root filesystem type specified
+          # in container, please use --rootfs" (osbuild/bootc-image-builder#494).
+          # The local build path knew this; the workflow never did.
+          additional-args: --use-librepo=True --rootfs=btrfs
 
       - name: Upload disk images and Checksum to Job Artifacts
         if: inputs.upload-to-s3 != true && github.event_name != 'pull_request'

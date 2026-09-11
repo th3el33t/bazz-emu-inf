@@ -1,6 +1,17 @@
 ---
 name: Build disk images
 
+# ⚠️ This workflow has NEVER completed — here or upstream
+# (ublue-os/image-template registers it and has never once run it), so it is
+# unexercised template code, not a path anything has relied on.
+#
+# PR #40 fixed five defects that killed it before it reached a build (a missing
+# disk_config/iso.toml, an unmatched paths: filter, inputs.platform being null on
+# pull_request, an action pin too old for ubuntu-26.04, and a missing
+# --rootfs=btrfs). Two blockers remain, both from the base image: qcow2 rejects
+# `customizations.filesystem`, and the anaconda-iso depsolve cannot find Bazzite's
+# terra-mesa GPG key. See README §Build for detail. Do not treat a green
+# "Build container image" badge as evidence this workflow works.
 on:
   workflow_dispatch:
     inputs:

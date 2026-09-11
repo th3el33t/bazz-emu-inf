@@ -166,4 +166,36 @@ image's `java25` default. Then perform the clean swap above.
 
 CI (`.github/workflows/build.yml`) builds on every push to `main`, on PRs (build only, no
 publish), and nightly at 10:05 UTC, rebasing on the latest upstream Bazzite. Base image
-digest is pinned and bumped by renovate.
+digest is pinned and bumped by renovate. Every build is gated by `bootc container lint` and
+signed keyless; `ghcr.io/th3el33t/bazz-emu-inf:latest` is the artifact `bootc upgrade` pulls.
+
+### Installable media (`.github/workflows/build-disk.yml`) — ⚠️ not a working path yet
+
+`Build disk images` (manual `workflow_dispatch`, `platform: amd64`) is meant to turn the
+published image into a `qcow2` and an Anaconda ISO whose kickstart `bootc switch`es to
+`:latest`. **It has never completed, here or upstream** — `ublue-os/image-template` still
+registers the workflow and has never once run it, so this is unexercised template code rather
+than a path anyone has relied on. The documented install route is a rebase from a stock
+Bazzite USB (§Install), which is what WaterDemon was actually installed with.
+
+Four defects that made it die before reaching a build are fixed: a `config-file` pointing at a
+nonexistent `disk_config/iso.toml`, a `paths:` filter whose leading `./` could never match,
+`inputs.platform` being null on `pull_request` (so a PR chose the arm64 runner), a
+`remove-unwanted-software` pin too old for the `ubuntu-26.04` runner, and a missing
+`--rootfs=btrfs` that the local `just _build-bib` recipe has always passed.
+
+Two blockers remain, both rooted in the base image rather than in this repo, and neither has
+been solved:
+
+- **`qcow2`** — `blueprint validation failed for image type "qcow2":
+  customizations.filesystem: not supported`. `disk_config/disk.toml`'s
+  `[[customizations.filesystem]]` block is not accepted for this image type by the current
+  `bootc-image-builder`; a follow-on `mount: /run/osbuild/containers/storage: permission denied`
+  suggests the hosted runner may not support the build even without it.
+- **`anaconda-iso`** — depsolve fails on Bazzite's own repo:
+  `Failed to retrieve GPG key for repo 'terra-mesa' … Curl error (37) …
+  /etc/pki/rpm-gpg/RPM-GPG-KEY-terra44-mesa [Couldn't open file]`. The repo entry shipped in
+  the base image references a key file that is not present in the container.
+
+Treat this workflow as unverified until a dispatched run produces artifacts. Verify with the
+run's job list, not with the presence of the workflow file.

@@ -20,9 +20,16 @@ Consequences that decide how you work here:
   and published to `ghcr.io/th3el33t/bazz-emu-inf:latest`. That is deliberate — the point is
   that the image stays current so the box can be re-imaged when it returns, not that anything
   consumes it today.
-- **Recent work is re-install preparation**, not runtime work: the 2026-09-11 commits fixed the
-  `build-disk` / anaconda-ISO leg. That is the path that gets a warranty-returned box back to
-  this image, so treat it as load-bearing.
+- ⚠️ **The install path is a USB rebase, NOT the ISO workflow.** `build-disk.yml` has **never
+  completed — here or upstream** (ublue-os/image-template registers it and has never once run
+  it); it is unexercised template code. The 2026-09-11 commits fixed five defects that killed
+  it before it even reached a build, and **two blockers remain** from the base image: qcow2
+  rejects `customizations.filesystem`, and the anaconda-iso depsolve cannot find Bazzite's
+  terra-mesa GPG key. A warranty-returned box gets back onto this image the documented way —
+  boot a stock Bazzite USB, then `bootc switch` (README §Install), which is how WaterDemon was
+  installed in the first place. **Do not read a green "Build container image" badge as
+  evidence the disk workflow works**, and do not treat a red `build-disk` run on a PR as a
+  regression that PR caused.
 - **The four CPU services WaterDemon used to host moved to `cpu-svc` (`192.168.86.74`,
   LXC 123)** — `kokoro-tts` :8092, `fwhisper` :8090, `supertonic-tts` :7788, `hound` :8765 —
   and its `qwen3-coder-30b-a3b` inference lane on :8085 was **killed, not paused**. Anything

@@ -12,6 +12,19 @@ name: Build disk images
 # `customizations.filesystem`, and the anaconda-iso depsolve cannot find Bazzite's
 # terra-mesa GPG key. See README §Build for detail. Do not treat a green
 # "Build container image" badge as evidence this workflow works.
+#
+# ⛔ DISPATCH-ONLY since 2026-09-14. The `pull_request:` trigger was removed
+# deliberately: with both blockers unsolved this failed on EVERY pull request, so
+# its red check carried no information while costing ~12 min of CI each time — and
+# a check that is always red trains you to ignore checks. It also targets
+# WaterDemon, dead since 2026-09-08 (will not POST, out for warranty), so there is
+# nothing to install the output onto right now.
+#
+# NOT deleted: the PR #40 fixes and the blocker analysis are worth keeping, and it
+# is still runnable by hand. To resume: fix the two blockers, prove it with a
+# dispatched run that produces ARTIFACTS (not merely a green job), then restore
+# the `pull_request:` trigger from git history — and note the leading-`./` bug
+# that filter had, which made it silently never match.
 on:
   workflow_dispatch:
     inputs:
@@ -26,15 +39,6 @@ on:
         options:
           - amd64
           - arm64
-  pull_request:
-    branches:
-      - main
-    # NOTE: no leading './' — GitHub matches these against the repo-root-relative
-    # path, so './…' never matches and the workflow silently never ran on a PR.
-    paths:
-      - 'disk_config/disk.toml'
-      - 'disk_config/iso-kde.toml'
-      - '.github/workflows/build-disk.yml'
 
 env:
   IMAGE_NAME: ${{ github.event.repository.name }} # output of build.yml, keep in sync

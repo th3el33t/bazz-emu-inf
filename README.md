@@ -199,3 +199,15 @@ been solved:
 
 Treat this workflow as unverified until a dispatched run produces artifacts. Verify with the
 run's job list, not with the presence of the workflow file.
+
+**⛔ Dispatch-only since 2026-09-14.** The `pull_request:` trigger was removed. With both
+blockers unsolved it failed on *every* pull request, so its red check carried no information
+while costing ~12 min of CI per PR — and a check that is always red trains you to ignore
+checks. WaterDemon, the box this media targets, has also been dead since 2026-09-08 (will not
+POST, out for warranty), so there is nothing to install the output onto meanwhile.
+
+The workflow is kept, not deleted: the PR #40 fixes and the blocker analysis above are worth
+having, and it is still runnable by hand via `workflow_dispatch`. To resume, fix the two
+blockers, prove it with a dispatched run that produces **artifacts** (not merely a green job),
+then restore the `pull_request:` trigger from git history — noting the leading-`./` bug that
+filter had, which made it silently never match.
